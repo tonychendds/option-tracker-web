@@ -1,4 +1,4 @@
-const CACHE = "option-tracker-v6";
+const CACHE = "option-tracker-v7";
 const SCOPE_URL = new URL("./", self.location.href);
 
 function scoped(path) {
@@ -8,6 +8,7 @@ function scoped(path) {
 const PRECACHE = [
   "",
   "positions/",
+  "ideas/",
   "assigned/",
   "history/",
   "settings/",

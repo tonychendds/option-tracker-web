@@ -1,4 +1,4 @@
-const CACHE = "option-tracker-v23";
+const CACHE = "option-tracker-v24";
 const SCOPE_URL = new URL("./", self.location.href);
 
 function scoped(path) {
@@ -15,6 +15,7 @@ const PRECACHE = [
   "manifest.webmanifest",
   "icons/icon-192.png",
   "icons/icon-512.png",
+  "icons/apple-touch-icon.png",
 ].map(scoped);
 
 self.addEventListener("install", (event) => {

@@ -1,4 +1,4 @@
-const CACHE = "option-tracker-v39";
+const CACHE = "option-tracker-v40";
 const SCOPE_URL = new URL("./", self.location.href);
 
 function scoped(path) {
@@ -41,18 +41,10 @@ self.addEventListener("activate", (event) => {
     (async () => {
       const keys = await caches.keys();
       await Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key)));
+      // Claim and finish. Reloading windows from here never settles on Chrome, so the
+      // worker stays activating and the push subscription reads as missing. The open
+      // page reloads itself on controllerchange. A cache update must leave the subscription in place.
       await self.clients.claim();
-      const windows = await self.clients.matchAll({ type: "window" });
-      await Promise.all(
-        windows.map(async (client) => {
-          if (!client.url.startsWith("http") || typeof client.navigate !== "function") return;
-          try {
-            await client.navigate(client.url);
-          } catch {
-            // The page reloads itself on controllerchange when this build is already running.
-          }
-        }),
-      );
     })(),
   );
 });

@@ -1,4 +1,4 @@
-const CACHE = "option-tracker-v37";
+const CACHE = "option-tracker-v38";
 const SCOPE_URL = new URL("./", self.location.href);
 
 function scoped(path) {
@@ -62,6 +62,54 @@ self.addEventListener("message", (event) => {
   if (!data || typeof data !== "object") return;
   if (data.type === "SKIP_WAITING") self.skipWaiting();
   if (data.type === "GET_CACHE" && event.ports && event.ports[0]) event.ports[0].postMessage({ cache: CACHE });
+});
+
+self.addEventListener("push", (event) => {
+  let payload = { title: "Option Tracker", body: "", url: "positions/", tag: "" };
+  try {
+    const data = event.data ? event.data.json() : null;
+    if (data && typeof data === "object") {
+      if (typeof data.title === "string" && data.title) payload.title = data.title;
+      if (typeof data.body === "string") payload.body = data.body;
+      if (typeof data.url === "string" && data.url) payload.url = data.url;
+      if (typeof data.tag === "string") payload.tag = data.tag;
+    }
+  } catch {
+    // A push with no JSON still opens Positions.
+  }
+  const shown = payload;
+  event.waitUntil(
+    (async () => {
+      await self.registration.showNotification(shown.title, {
+        body: shown.body,
+        icon: scoped("icons/icon-192.png"),
+        badge: scoped("icons/icon-192.png"),
+        data: { url: shown.url },
+        tag: shown.tag || "option-tracker",
+      });
+      const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+      await Promise.all(windows.map((client) => client.postMessage({ type: "PUSH", title: shown.title, body: shown.body })));
+    })(),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const relative =
+    event.notification.data && typeof event.notification.data.url === "string" ? event.notification.data.url : "positions/";
+  const target = scoped(relative);
+  event.waitUntil(
+    (async () => {
+      const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+      for (const client of windows) {
+        if (!client.url.startsWith(self.registration.scope)) continue;
+        if ("focus" in client) await client.focus();
+        if ("navigate" in client) await client.navigate(target);
+        return;
+      }
+      if (self.clients.openWindow) await self.clients.openWindow(target);
+    })(),
+  );
 });
 
 self.addEventListener("fetch", (event) => {

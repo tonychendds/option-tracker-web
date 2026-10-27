@@ -1,4 +1,4 @@
-const CACHE = "option-tracker-v53";
+const CACHE = "option-tracker-v54";
 const SCOPE_URL = new URL("./", self.location.href);
 
 function scoped(path) {
